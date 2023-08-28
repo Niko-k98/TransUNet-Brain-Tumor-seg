@@ -88,6 +88,8 @@ if __name__ == "__main__":
         config_vit.patches.grid = (int(args.img_size / args.vit_patches_size), int(args.img_size / args.vit_patches_size))
     net = ViT_seg(config_vit, img_size=args.img_size, num_classes=config_vit.n_classes).cuda()
     net.load_from(weights=np.load(config_vit.pretrained_path))
+    # net.load_state_dict(torch.load('../model/TU_Synapse224/TU_pretrain_R50-ViT-B_16_skip3_epo200_bs24_224/epoch_199.pth'))
+    # net.load_from(weights=np.load("model/vit_checkpoint/imagenet21k/R50+ViT-B_16.npz"))
 
-    trainer = {'Synapse': trainer_synapse,}
+    trainer = {'Synapse': trainer_synapse}
     trainer[dataset_name](args, net, snapshot_path)

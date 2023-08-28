@@ -4,8 +4,9 @@ import h5py
 import numpy as np
 import torch
 from scipy import ndimage
-from scipy.ndimage.interpolation import zoom
+from scipy.ndimage import zoom
 from torch.utils.data import Dataset
+# print("SYNAPSE")
 
 
 def random_rot_flip(image, label):
@@ -26,6 +27,7 @@ def random_rotate(image, label):
 
 
 class RandomGenerator(object):
+    # print("RNG")
     def __init__(self, output_size):
         self.output_size = output_size
 
@@ -47,21 +49,23 @@ class RandomGenerator(object):
 
 
 class Synapse_dataset(Dataset):
+    # print('synapse')
     def __init__(self, base_dir, list_dir, split, transform=None):
         self.transform = transform  # using transform in torch!
         self.split = split
         self.sample_list = open(os.path.join(list_dir, self.split+'.txt')).readlines()
         self.data_dir = base_dir
-
+    # print("synapse")
     def __len__(self):
         return len(self.sample_list)
-
+    # print("synapse")
     def __getitem__(self, idx):
         if self.split == "train":
             slice_name = self.sample_list[idx].strip('\n')
             data_path = os.path.join(self.data_dir, slice_name+'.npz')
             data = np.load(data_path)
             image, label = data['image'], data['label']
+            # print("synapse")
         else:
             vol_name = self.sample_list[idx].strip('\n')
             filepath = self.data_dir + "/{}.npy.h5".format(vol_name)
@@ -72,4 +76,5 @@ class Synapse_dataset(Dataset):
         if self.transform:
             sample = self.transform(sample)
         sample['case_name'] = self.sample_list[idx].strip('\n')
+        # print("synapse")
         return sample

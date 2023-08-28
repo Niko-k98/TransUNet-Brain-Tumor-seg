@@ -1,4 +1,5 @@
 import numpy as np
+np.bool = np.bool_
 import torch
 from medpy import metric
 from scipy.ndimage import zoom
@@ -45,10 +46,15 @@ class DiceLoss(nn.Module):
         return loss / self.n_classes
 
 
+    
+
+
 def calculate_metric_percase(pred, gt):
+    
     pred[pred > 0] = 1
     gt[gt > 0] = 1
     if pred.sum() > 0 and gt.sum()>0:
+        
         dice = metric.binary.dc(pred, gt)
         hd95 = metric.binary.hd95(pred, gt)
         return dice, hd95
@@ -86,9 +92,13 @@ def test_single_volume(image, label, net, classes, patch_size=[256, 256], test_s
             out = torch.argmax(torch.softmax(net(input), dim=1), dim=1).squeeze(0)
             prediction = out.cpu().detach().numpy()
     metric_list = []
+   
     for i in range(1, classes):
+        print(prediction.mean())
+        print(label.mean())
+        print("class",i)
+        # exit()
         metric_list.append(calculate_metric_percase(prediction == i, label == i))
-
     if test_save_path is not None:
         img_itk = sitk.GetImageFromArray(image.astype(np.float32))
         prd_itk = sitk.GetImageFromArray(prediction.astype(np.float32))

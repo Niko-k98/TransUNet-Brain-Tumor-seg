@@ -3,6 +3,7 @@ import logging
 import os
 import random
 import sys
+import h5py
 import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
@@ -116,9 +117,13 @@ if __name__ == "__main__":
     if args.vit_name.find('R50') !=-1:
         config_vit.patches.grid = (int(args.img_size/args.vit_patches_size), int(args.img_size/args.vit_patches_size))
     net = ViT_seg(config_vit, img_size=args.img_size, num_classes=config_vit.n_classes).cuda()
-
+    # print(snapshot_path)
+ 
     snapshot = os.path.join(snapshot_path, 'best_model.pth')
+    # print(snapt)
     if not os.path.exists(snapshot): snapshot = snapshot.replace('best_model', 'epoch_'+str(args.max_epochs-1))
+    # print(snapshot)
+    # exit()
     net.load_state_dict(torch.load(snapshot))
     snapshot_name = snapshot_path.split('/')[-1]
 
