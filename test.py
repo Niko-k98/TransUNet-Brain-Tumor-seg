@@ -62,7 +62,7 @@ def inference(args, model, test_save_path=None):
     performance = np.mean(metric_list, axis=0)[0]
     mean_hd95 = np.mean(metric_list, axis=0)[1]
     logging.info('Testing performance in best val model: mean_dice : %f mean_hd95 : %f' % (performance, mean_hd95))
-    return "Testing Finished!"
+    return performance, mean_hd95
 
 
 if __name__ == "__main__":
@@ -79,11 +79,18 @@ if __name__ == "__main__":
     torch.cuda.manual_seed(args.seed)
 
     dataset_config = {
-        'Synapse': {
+        'Synapse2': {
             'Dataset': Synapse_dataset,
             'volume_path': '../data/Synapse/test_vol_h5',
             'list_dir': './lists/lists_Synapse',
             'num_classes': 9,
+            'z_spacing': 1,
+        },
+          'Synapse': {
+            'Dataset': Synapse_dataset,
+            'volume_path': '/data/Koutsoubn8/Bratz_2018/HGG/test_vol',
+            'list_dir': 'lists/lists_Bratz',
+            'num_classes': 5,
             'z_spacing': 1,
         },
     }
@@ -124,7 +131,8 @@ if __name__ == "__main__":
     if not os.path.exists(snapshot): snapshot = snapshot.replace('best_model', 'epoch_'+str(args.max_epochs-1))
     # print(snapshot)
     # exit()
-    net.load_state_dict(torch.load(snapshot))
+    # net.load_state_dict(torch.load(snapshot))
+    
     snapshot_name = snapshot_path.split('/')[-1]
 
     log_folder = './test_log/test_log_' + args.exp
