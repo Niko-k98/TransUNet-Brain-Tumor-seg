@@ -1,6 +1,8 @@
 import os
 import numpy as np
 import nibabel as nib
+import random
+import shutil
 
 import cv2
 import numpy as np
@@ -109,7 +111,43 @@ class NiftiProcessor:
         # print("Slices and labels saved in npz files.")
 
 
+
+
+def move_folders(source, destination, percentage, move_back=False):
+    if move_back:
+        source, destination = destination, source
+   
+    folders = [folder for folder in os.listdir(source) if os.path.isdir(os.path.join(source, folder))]
+    # print(len(folders))
+    num_folders_to_move = int(len(folders) * (percentage / 100))
+    folders_to_move = random.sample(folders, num_folders_to_move)
+
+    for folder in folders_to_move:
+        source_path = os.path.join(source, folder)
+        destination_path = os.path.join(destination, folder)
+        shutil.move(source_path, destination_path)
+        # print(source_path)
+        # print(destination_path)
+
+    print(f"{num_folders_to_move} folders moved from {source} to {destination}.")
+
+def save_subdirectory_data(subdirectories, output_directory):
+    for subdir in subdirectories:
+        npz_files = glob.glob(os.path.join(subdir, "*.npz"))
+        
+        for npz_file in npz_files:
+            data = np.load(npz_file)
+            output_npy_path = os.path.join(output_directory, f"{os.path.basename(subdir)}.npy")
+            # print(data['image'])
+            print(output_npy_path)
+            np.save(output_npy_path, (data['image'],data['label']))  # Adjust this based on your dataset
+            
+            # print("Data saved to", output_npy_path)
+
 # Example usage
+
+
+
 nii_img_path=glob.glob("/data/BRATS_2018/HGG/*/*")
 filterseg=['seg.']
 nii_img_path=[element for element in nii_img_path if not any(char in element for char in filterseg)]
@@ -126,34 +164,64 @@ print(len(nii_label_path))
 # exit()
 
 
-# nii_img_path = '/data/BRATS_2018/HGG/Brats18_2013_2_1/Brats18_2013_2_1_t2.nii.gz'
-# nii_label_path = '/data/BRATS_2018/HGG/Brats18_2013_2_1/Brats18_2013_2_1_seg.nii.gz'
-output_dir = "../data/bratz/train_npz"
+
+output_dir="/data/Koutsoubn8/Bratz_2018/HGG/train_npz" # train slices
+
+output_test_dir="/data/Koutsoubn8/Bratz_2018/HGG/test_slices" # test slices
+
+root_directory = output_test_dir
+output_directory = "/data/Koutsoubn8/Bratz_2018/HGG/test_vol"
+        # if not os.path.exists(output_directory):
+        #     os.makedirs(output_directory, exist_ok=True)
+percentage_to_move=20
+# output_dir = "../data/bratz/train_npz"
 data_dir = "../data/bratz/train_npz/*"
 img_type = "npz"
 j=0
 for i, case in enumerate(nii_img_path):
     if (i) % 4==0:
         j=j+1
-        print('+'*40)
+        patient=nii_label_path[j-1].split('/')
+       
+        # exit()
+        print('+'*60)
     print("="*30)
+    # patient=slicer.extract_patient_name
     print("i", i,'j', j)
     print("case : ",case)
     print("label: ",nii_label_path[j-1])
-    slicer = NiftiProcessor(case, nii_label_path[j-1])
-    slicer.process_and_save_slices(output_dir)
-   
-    
+    try:
+        slicer = NiftiProcessor(case, nii_label_path[j-1])
+        print(output_dir + "/"+patient[3] + "_" + patient[4] + "/")
+        slicer.process_and_save_slices(output_dir + "/"+patient[3] + "_" + patient[4] + "/")
+    except:
+        print("THERE WAS AN ERROR")
+    # move_folders(output_dir, output_test_dir, percentage_to_move)
 
-    # if (i+1) % 20 == 0:           # use to stop early /visualize
-    #     showimages = ImageProcessor(img_type, data_dir)
-    #     showimages.process_images()
+
+    # if (i+1) % 40 == 0: 
+move_folders(output_dir, output_test_dir, percentage_to_move)
+
+        # npz_directory ="..data/Koutsoubn8/Bratz_2018/HGG/test_slices"
+
+                        # "../data/Koutsoubn8/Bratz_2018/HGG/test_slices"
+        # root_directory = "../data/Koutsoubn8/Bratz_2018/HGG/test_slices"
+        # output_directory = "../data/Koutsoubn8/Bratz_2018/HGG/test_vol"
+    
+        # output_directory = "..data/bratz/test_vol"
+
+subdirectories = [os.path.join(root_directory, subdir) for subdir in os.listdir(root_directory) if os.path.isdir(os.path.join(root_directory, subdir))]
+save_subdirectory_data(subdirectories, output_directory)
+            # use to stop early /visualize
+        #     showimages = ImageProcessor(img_type, data_dir)
+        #     showimages.process_images()
         # exit()
+# move_folders(output_dir, output_test_dir, percentage_to_move)
 
 
 # exit()
-slicer = NiftiProcessor(nii_img_path, nii_label_path)
-slicer.process_and_save_slices(output_dir)
+# slicer = NiftiProcessor(nii_img_path, nii_label_path)
+# slicer.process_and_save_slices(output_dir)
 
 #use for visualization
 # img_type = "npz"
