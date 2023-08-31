@@ -18,6 +18,7 @@ from torchvision import transforms
 from inspect import currentframe, getframeinfo
 import cv2
 import matplotlib.pyplot as plt
+from test import inference
 wandb.init(project="TransUnet")
  
 def trainer_synapse(args, model, snapshot_path):
@@ -59,13 +60,28 @@ def trainer_synapse(args, model, snapshot_path):
     iterator = tqdm(range(max_epoch), ncols=70)
     
     for epoch_num in iterator:
-        # print("epoch: ",epoch_num)
+        wandb.log({"epoch" : epoch_num})
         for i_batch, sampled_batch in enumerate(trainloader):
             # print("batch # ", i_batch)
             image_batch, label_batch = sampled_batch['image'], sampled_batch['label']
             image_batch, label_batch = image_batch.cuda(), label_batch.cuda()
             outputs = model(image_batch)
+            # print(outputs.shape)
+            # print(outputs.shape)
+            # exit()
+            # print("============================================================================")
+            
+            # print(type(image_batch))
+            # print(image_batch[0][0][0].shape)
+            # print(image_batch[0][0][0])
+            # print(type(image_batch[0][0][0]))
+            # exit()
+            # print(label_batch)
+            # print(label_batch.shape)
+            # exit()
             loss_ce = ce_loss(outputs, label_batch[:].long())
+            # print(loss_ce)
+            # exit()
             loss_dice = dice_loss(outputs, label_batch, softmax=True)
             loss = 0.5 * loss_ce + 0.5 * loss_dice
             optimizer.zero_grad()
@@ -80,16 +96,19 @@ def trainer_synapse(args, model, snapshot_path):
             writer.add_scalar('info/total_loss', loss, iter_num)
             writer.add_scalar('info/loss_ce', loss_ce, iter_num)
 
-            wandb.log({"iteration": iter_num})
+            wandb.log({"epoch" : epoch_num,"iteration": iter_num})
             wandb.log({"lr" : lr_ })
-            wandb.log({"total_loss" : loss})
-            wandb.log({"loss_ce" : loss_ce,})
-
+            wandb.log({"epoch" : epoch_num, "total_loss" : loss})
+            wandb.log({"epoch" : epoch_num,"loss_ce" : loss_ce,})
+        
             logging.info('iteration %d : loss : %f, loss_ce: %f' % (iter_num, loss.item(), loss_ce.item()))
-
-            if iter_num % 31 == 0:
-                image = image_batch[1, 0:1, :, :]
-              
+          
+        
+            if iter_num % 200 == 0:
+                pixel_sums=torch.sum(image_batch, dim=(1,2,3))
+                max_pixel=torch.argmax(pixel_sums)
+                image = image_batch[ max_pixel, 0:1, :, :]
+                
                 # print(image.size())
                 image = (image - image.min()) / (image.max() - image.min())
                 writer.add_image('train/Image', image, iter_num)
@@ -107,7 +126,7 @@ def trainer_synapse(args, model, snapshot_path):
                 outputs = torch.argmax(torch.softmax(outputs, dim=1), dim=1, keepdim=True)
                 writer.add_image('train/Prediction', outputs[1, ...] * 50, iter_num)
                 writer.add_image('train/Prediction_2', outputs[1, ...], iter_num)
-                pred_img=(outputs[1, ...])
+                pred_img=(outputs[max_pixel, ...])
                 # print(pred_img.sum())
                 pred_img = pred_img.cpu().numpy()
                 
@@ -137,7 +156,7 @@ def trainer_synapse(args, model, snapshot_path):
                 # print(pred_img.shape)
 
 
-                labs = label_batch[1, ...].unsqueeze(0)                 
+                labs = label_batch[ max_pixel, ...].unsqueeze(0)                 
                 writer.add_image('train/GroundTruth', labs, iter_num)
                 print("gtsum",labs.sum())
                 gt_img = labs.cpu().numpy()
@@ -180,13 +199,20 @@ def trainer_synapse(args, model, snapshot_path):
                 cv2.imwrite('../viz/combined_image_{}.png'.format(i_batch), combined_image)
             
                 # Log the image using wandb.Image
-                wandb.log({"visualization": wandb.Image(combined_image)})
+                wandb.log({"epoch": epoch_num, "visualization": wandb.Image(combined_image)})
                 
 
 
 
-
-                # print(gt_img.shape)
+        #testing eval
+        # if epoch_num % 1 == 0:
+        #     args.test_save_dir = '../predictions'
+        #     test_save_path = os.path.join(args.test_save_dir, args.exp, snapshot_name)
+        #     os.makedirs(test_save_path, exist_ok=True)
+        #     performance, hd95 = inference(args ,model,"/inference")
+        #     wandb.log({"epoch": epoch_num, "performance(dice)" : performance})
+        #     wandb.log({"epoch": epoch_num, "hd_95" : hd_95})
+            
                 
         save_interval = 50  # int(max_epoch/6)
         if epoch_num > int(max_epoch / 2) and (epoch_num + 1) % save_interval == 0:

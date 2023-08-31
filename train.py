@@ -24,7 +24,6 @@ parser.add_argument('--max_epochs', type=int,
                     default=150, help='maximum epoch number to train')
 parser.add_argument('--batch_size', type=int,
                     default=24, help='batch_size per gpu')
-parser.add_argument('--n_gpu', type=int, default=1, help='total gpu')
 parser.add_argument('--deterministic', type=int,  default=1,
                     help='whether use deterministic training')
 parser.add_argument('--base_lr', type=float,  default=0.01,
@@ -39,6 +38,7 @@ parser.add_argument('--vit_name', type=str,
                     default='R50-ViT-B_16', help='select one vit model')
 parser.add_argument('--vit_patches_size', type=int,
                     default=16, help='vit_patches_size, default is 16')
+parser.add_argument('--n_gpu', type=int, default=5, help='total gpu')
 args = parser.parse_args()
 
 
@@ -56,10 +56,18 @@ if __name__ == "__main__":
     torch.cuda.manual_seed(args.seed)
     dataset_name = args.dataset
     dataset_config = {
-        'Synapse': {
+        'Synapse2': {
             'root_path': '../data/Synapse/train_npz',
             'list_dir': './lists/lists_Synapse',
             'num_classes': 9,
+        },
+        "Bratz" : {
+
+        },
+         'Synapse': {
+            'root_path': '/data/Koutsoubn8/Bratz_2018/HGG/train_npz',
+            'list_dir': 'lists/lists_Bratz/HGG',
+            'num_classes': 5,
         },
     }
     args.num_classes = dataset_config[dataset_name]['num_classes']
