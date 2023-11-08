@@ -10,7 +10,7 @@ import torch.backends.cudnn as cudnn
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from datasets.dataset_synapse import Synapse_dataset
+from datasets.dataset_synapse import Synapse_dataset, Bratz_dataset
 from utils import test_single_volume
 from networks.vit_seg_modeling import VisionTransformer as ViT_seg
 from networks.vit_seg_modeling import CONFIGS as CONFIGS_ViT_seg
@@ -79,17 +79,17 @@ if __name__ == "__main__":
     torch.cuda.manual_seed(args.seed)
 
     dataset_config = {
-        'Synapse2': {
+        'Synapse': {
             'Dataset': Synapse_dataset,
             'volume_path': '../data/Synapse/test_vol_h5',
             'list_dir': './lists/lists_Synapse',
             'num_classes': 9,
             'z_spacing': 1,
         },
-          'Synapse': {
-            'Dataset': Synapse_dataset,
-            'volume_path': '/data/Koutsoubn8/Bratz_2018/HGG/test_vol',
-            'list_dir': 'lists/lists_Bratz',
+          'Bratz_LGG': {
+            'Dataset': Bratz_dataset,
+            'volume_path': '/data/Koutsoubn8/Bratz_2018/LGG/test_vol',
+            'list_dir': 'lists/lists_Bratz/LGG',
             'num_classes': 5,
             'z_spacing': 1,
         },
@@ -124,14 +124,27 @@ if __name__ == "__main__":
     if args.vit_name.find('R50') !=-1:
         config_vit.patches.grid = (int(args.img_size/args.vit_patches_size), int(args.img_size/args.vit_patches_size))
     net = ViT_seg(config_vit, img_size=args.img_size, num_classes=config_vit.n_classes).cuda()
-    # print(snapshot_path)
  
     snapshot = os.path.join(snapshot_path, 'best_model.pth')
     # print(snapt)
-    if not os.path.exists(snapshot): snapshot = snapshot.replace('best_model', 'epoch_'+str(args.max_epochs-1))
+    if not os.path.exists(snapshot): snapshot = snapshot.replace('best_model', 'epoch_'+str(args.max_epochs))
     # print(snapshot)
     # exit()
     # net.load_state_dict(torch.load(snapshot))
+    # net.load_state_dict(torch.load('../model/Bratz_HGG_200e_24b.pth'))
+
+    state_dict=torch.load('../model/Bratz_HGG_200e_24b.pth')
+    
+    from collections import OrderedDict
+    new_state_dict = OrderedDict()
+    for k, v in state_dict.items():
+        name = k[7:] # remove module.
+        new_state_dict[name] = v
+
+    net.load_state_dict(new_state_dict)
+    print('pretrain_loaded')
+    
+
     
     snapshot_name = snapshot_path.split('/')[-1]
 

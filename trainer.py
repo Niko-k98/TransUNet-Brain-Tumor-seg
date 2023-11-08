@@ -19,6 +19,7 @@ from inspect import currentframe, getframeinfo
 import cv2
 import matplotlib.pyplot as plt
 from test import inference
+
 wandb.init(project="TransUnet")
  
 def trainer_synapse(args, model, snapshot_path):
@@ -61,6 +62,7 @@ def trainer_synapse(args, model, snapshot_path):
     
     for epoch_num in iterator:
         wandb.log({"epoch" : epoch_num})
+        
         for i_batch, sampled_batch in enumerate(trainloader):
             # print("batch # ", i_batch)
             image_batch, label_batch = sampled_batch['image'], sampled_batch['label']
@@ -104,7 +106,7 @@ def trainer_synapse(args, model, snapshot_path):
             logging.info('iteration %d : loss : %f, loss_ce: %f' % (iter_num, loss.item(), loss_ce.item()))
           
         
-            if iter_num % 200 == 0:
+            if iter_num % 30 == 0:
                 pixel_sums=torch.sum(image_batch, dim=(1,2,3))
                 max_pixel=torch.argmax(pixel_sums)
                 image = image_batch[ max_pixel, 0:1, :, :]
@@ -212,10 +214,16 @@ def trainer_synapse(args, model, snapshot_path):
         #     performance, hd95 = inference(args ,model,"/inference")
         #     wandb.log({"epoch": epoch_num, "performance(dice)" : performance})
         #     wandb.log({"epoch": epoch_num, "hd_95" : hd_95})
-            
-                
+        if epoch_num % 10 == 0:
+            print('EVALUATING')
+            dice, hd95 = inference(args,model)
+            # print("dice score: ", dice, "hd95: ",hd95)
+            wandb.log({"epoch": epoch_num, "dice": dice})
+            wandb.log({"epoch": epoch_num, "hd95": hd95})
+            model.train()
+                    
         save_interval = 50  # int(max_epoch/6)
-        if epoch_num > int(max_epoch / 2) and (epoch_num + 1) % save_interval == 0:
+        if epoch_num > int(max_epoch / 4) and (epoch_num + 1) % save_interval == 0:
             save_mode_path = os.path.join(snapshot_path, 'epoch_' + str(epoch_num) + '.pth')
             torch.save(model.state_dict(), save_mode_path)
             logging.info("save model to {}".format(save_mode_path))

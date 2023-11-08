@@ -3,7 +3,7 @@ import numpy as np
 import nibabel as nib
 import random
 import shutil
-
+import h5py
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -131,27 +131,59 @@ def move_folders(source, destination, percentage, move_back=False):
 
     print(f"{num_folders_to_move} folders moved from {source} to {destination}.")
 
+# def save_subdirectory_data(subdirectories, output_directory):
+#     for subdir in subdirectories:
+#         npz_files = glob.glob(os.path.join(subdir, "*.npz"))
+        
+#         for npz_file in npz_files:
+#             data = np.load(npz_file)
+#             output_npy_path = os.path.join(output_directory, f"{os.path.basename(subdir)}.npy")
+#             # print(data['image'])
+#             print(output_npy_path)
+#             np.save(output_npy_path, (data['image'],data['label']))  # Adjust this based on your dataset
 def save_subdirectory_data(subdirectories, output_directory):
     for subdir in subdirectories:
+        lslash=subdir.rfind("/")
+        fdot=subdir.find('.')
+        h5name=subdir[lslash + 1:fdot]
         npz_files = glob.glob(os.path.join(subdir, "*.npz"))
-        
-        for npz_file in npz_files:
-            data = np.load(npz_file)
-            output_npy_path = os.path.join(output_directory, f"{os.path.basename(subdir)}.npy")
-            # print(data['image'])
-            print(output_npy_path)
-            np.save(output_npy_path, (data['image'],data['label']))  # Adjust this based on your dataset
+        images=[]
+        labels=[]
+        print("generating h5 file for", h5name )
+        for i, npz_file in enumerate(npz_files):
+            npz_data = np.load(npz_file)
+            image=npz_data['image']
+            label=npz_data['label']
+            images.append(image)
+            labels.append(label)  
+        image_array=np.array(images)
+        label_array=np.array(labels)    
+        # print(image_array.shape)
+        # print(label_array.shape)
+        # exit()   
+        with h5py.File(output_directory +"/{}.h5".format(h5name), 'w') as h5:              
+                h5.create_dataset(('image'), data=image_array)
+                h5.create_dataset(('label'),data=label_array)
             
             # print("Data saved to", output_npy_path)
 
-# Example usage
+#process bratz data into Transunet format (npz file with (image, label) arrays) 
+nii_img_path    =     "/data/BRATS_2018/HGG/*/*" # path to unprocessed img foler
+nii_label_path  =     "/data/BRATS_2018/HGG/*/*seg*" #path to unprocessed labels
+output_dir      =     "/data/Koutsoubn8/Bratz_2018/HGG/train_npz" # output folder for train imgs
+output_test_dir =     "/data/Koutsoubn8/Bratz_2018/HGG/test_slices" # output folder for test slices
+output_directory =    "/data/Koutsoubn8/Bratz_2018/HGG/test_vol"    # output folder to test volume
+percentage_to_move=    20  # % of data to move to testing
+
+#use to display image and gtruth (wip)
+# data_dir = "../data/bratz/train_npz/*"
+# img_type = "npz"
 
 
-
-nii_img_path=glob.glob("/data/BRATS_2018/HGG/*/*")
+nii_img_path=glob.glob(nii_img_path)
 filterseg=['seg.']
 nii_img_path=[element for element in nii_img_path if not any(char in element for char in filterseg)]
-nii_label_path=glob.glob('/data/BRATS_2018/HGG/*/*seg*')
+nii_label_path=glob.glob(nii_label_path)
 # print(nii_label_path)
 
 
@@ -165,18 +197,17 @@ print(len(nii_label_path))
 
 
 
-output_dir="/data/Koutsoubn8/Bratz_2018/HGG/train_npz" # train slices
+# output_dir="/data/Koutsoubn8/Bratz_2018/HGG/train_npz" # train slices
 
-output_test_dir="/data/Koutsoubn8/Bratz_2018/HGG/test_slices" # test slices
+# output_test_dir="/data/Koutsoubn8/Bratz_2018/HGG/test_slices" # test slices
 
 root_directory = output_test_dir
-output_directory = "/data/Koutsoubn8/Bratz_2018/HGG/test_vol"
+# output_directory = "/data/Koutsoubn8/Bratz_2018/HGG/test_vol"
         # if not os.path.exists(output_directory):
         #     os.makedirs(output_directory, exist_ok=True)
-percentage_to_move=20
+
 # output_dir = "../data/bratz/train_npz"
-data_dir = "../data/bratz/train_npz/*"
-img_type = "npz"
+
 j=0
 for i, case in enumerate(nii_img_path):
     if (i) % 4==0:
