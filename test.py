@@ -133,7 +133,8 @@ if __name__ == "__main__":
     # net.load_state_dict(torch.load(snapshot))
     # net.load_state_dict(torch.load('../model/Bratz_HGG_200e_24b.pth'))
 
-    state_dict=torch.load('../model/Bratz_HGG_200e_24b.pth')
+    # state_dict=torch.load('../model/Bratz_HGG_200e_24b.pth')
+    state_dict=torch.load('../model/TU_Bratz_LGG224/TU_pretrain_R50-ViT-B_16_skip3_epo200_bs48_224/epoch_199.pth')
     
     from collections import OrderedDict
     new_state_dict = OrderedDict()

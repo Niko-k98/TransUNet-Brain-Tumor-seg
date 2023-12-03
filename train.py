@@ -41,7 +41,7 @@ parser.add_argument('--vit_name', type=str,
                     default='R50-ViT-B_16', help='select one vit model')
 parser.add_argument('--vit_patches_size', type=int,
                     default=16, help='vit_patches_size, default is 16')
-parser.add_argument('--n_gpu', type=int, default=7, help='total gpu')
+parser.add_argument('--n_gpu', type=int, default=6, help='total gpu')
 args = parser.parse_args()
 
 
@@ -59,10 +59,13 @@ if __name__ == "__main__":
     torch.cuda.manual_seed(args.seed)
     dataset_name = args.dataset
     dataset_config = {
-        'Synapse2': {
+        'Synapse': {
+            'Dataset': Synapse_dataset,
             'root_path': '../data/Synapse/train_npz',
+            'volume_path': '../data/Synapse/test_vol',
             'list_dir': './lists/lists_Synapse',
             'num_classes': 9,
+            'z_spacing': 1,
         },
         "Bratz_LGG" : {
             'Dataset': Bratz_dataset,
@@ -78,14 +81,14 @@ if __name__ == "__main__":
             'root_path': '/data/Koutsoubn8/Bratz_2018/HGG/train_npz',
             'volume_path': '/data/Koutsoubn8/Bratz_2018/HGG/test_vol',
             'list_dir': 'lists/lists_Bratz/HGG',
-            'num_classes': 5,
+            'num_classes': 4,
             'z_spacing': 1,
 
         },
          'Bratz': {
             'root_path': '/data/Koutsoubn8/Bratz_2018/LGG/train_npz',
             'list_dir': 'lists/lists_Bratz/LGG',
-            'num_classes': 5,
+            'num_classes': 4,
         },
     }
     args.num_classes = dataset_config[dataset_name]['num_classes']
@@ -120,15 +123,16 @@ if __name__ == "__main__":
         config_vit.patches.grid = (int(args.img_size / args.vit_patches_size), int(args.img_size / args.vit_patches_size))
     net = ViT_seg(config_vit, img_size=args.img_size, num_classes=config_vit.n_classes).cuda()
     # net.load_from(weights=np.load("model/TU_Bratz_LGG224/TU_pretrain_R50-ViT-B_16_skip3_epo200_bs48_224/epoch_199.pth))
-    # net.load_from(weights=np.load(config_vit.pretrained_path))
-    state_dict=torch.load("../model/TU_Bratz_LGG224/TU_pretrain_R50-ViT-B_16_skip3_epo200_bs48_224/epoch_199.pth")
-    new_state_dict = OrderedDict()
-    for k, v in state_dict.items():
-        name = k[7:] # remove module.
-        new_state_dict[name] = v
+    # net.load_from(weights=np.load(config_vit.pretrained_path)
 
-    net.load_state_dict(new_state_dict)
-    print('pretrain_loaded')
+    # state_dict=torch.load("../model/TU_Bratz_LGG224/TU_pretrain_R50-ViT-B_16_skip3_epo200_bs48_224/epoch_199.pth")
+    # new_state_dict = OrderedDict()
+    # for k, v in state_dict.items():
+    #     name = k[7:] # remove module.
+    #     new_state_dict[name] = v
+
+    # net.load_state_dict(new_state_dict)
+    # print('pretrain_loaded')
     # net.load_state_dict(torch.load())
     # net.load_from(weights=np.load("model/vit_checkpoint/imagenet21k/R50+ViT-B_16.npz"))
 
