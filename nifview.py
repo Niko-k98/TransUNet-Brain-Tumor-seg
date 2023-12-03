@@ -1,5 +1,6 @@
 import SimpleITK as sitk
 import numpy as np
+import h5py
 
 # A path to a T1-weighted brain .nii image:
 # t1_fn = 'path_to_file.nii'
@@ -35,6 +36,26 @@ patient = nii_img_path[last_slash_index + 1:first_dot_index]
 print(nifti_data.shape)
 print(nifti_label.shape)
 
+data_dict = {
+    'image': nifti_img,
+    'label': nifti_label
+}
+file_path = 'h5_test.h5'
+
+# Save data_dict to the HDF5 file
+with h5py.File(file_path, 'w') as hdf_file:
+    hdf_file.create_dataset('image', data=data_dict['image'])
+    hdf_file.create_dataset('label', data=data_dict['label'])
+
+print("Data saved to", file_path)
+
+with h5py.File(file_path,'r') as file:
+    print(file['image'].shape)
+    print(file['label'].shape)
+
+
+
+exit()
 
 # Create a directory to store the slices
 output_dir = "output_slices"
@@ -81,5 +102,5 @@ for i, (image, label)  in enumerate(zip(slices_array,labels_array)):
     # exit()
     
     np.savez("npz/{}_slice_{}".format(patient,i), image=image, label=labels_array[i])
-
+    exit()
 print("Slices and labels saved in npz file.")
