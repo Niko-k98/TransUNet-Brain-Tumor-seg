@@ -75,6 +75,7 @@ if __name__ == "__main__":
             'num_classes': 5,
             'z_spacing': 1,
 
+
         },
             "Bratz_HGG" : {
             'Dataset': Bratz_dataset,
