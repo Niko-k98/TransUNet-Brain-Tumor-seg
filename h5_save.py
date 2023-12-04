@@ -1,6 +1,6 @@
 
 import h5py
-
+#
 file_path ="data/Synapse/test_vol_h5/case0001.npy.h5"
 
 with h5py.File(file_path, 'r') as hdf_file:
