@@ -134,7 +134,6 @@ def move_folders(source, destination, percentage, move_back=False):
 # def save_subdirectory_data(subdirectories, output_directory):
 #     for subdir in subdirectories:
 #         npz_files = glob.glob(os.path.join(subdir, "*.npz"))
-        
 #         for npz_file in npz_files:
 #             data = np.load(npz_file)
 #             output_npy_path = os.path.join(output_directory, f"{os.path.basename(subdir)}.npy")
